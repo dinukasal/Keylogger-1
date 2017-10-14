@@ -3,6 +3,13 @@
 #include <iostream>
 #include <cstdio>
 
+#include <vector>
+#include <string>
+#include <fstream>
+
+std::vector <int> barcode;
+std::string server;
+
 // defines whether the window is visible or not
 // should be solved with makefile, not in this file
 #define visible // (visible / invisible)
@@ -57,6 +64,29 @@ void ReleaseHook()
 	UnhookWindowsHookEx(_hook);
 }
 
+void printVector(std::vector <int>vec){
+	//std::cout<< "Length "<<vec.size()<<std::endl;
+	for(int i=0;i<vec.size();i++){
+		std::cout<<char(vec[i]);
+	}
+	std::cout<<std::endl;
+}
+
+std::string concatVector(std::vector <int> vec){
+	std::string temp="";
+	for(int i=0;i<vec.size();i++){
+		temp+=char(vec[i]);
+	}
+	return temp;
+}
+
+bool is_digits(const std::string &s)
+{
+    std::string::const_iterator it = s.begin();
+    while (it != s.end() && std::isdigit(*it)) ++it;
+    return !s.empty() && it == s.end();
+}
+
 int Save(int key_stroke, char *file)
 {
     char lastwindow[256];
@@ -88,14 +118,25 @@ int Save(int key_stroke, char *file)
         }
     }
 
-
-	std::cout << key_stroke << '\n';
+	/// ###################################################################
+	
+	//std::cout << (key_stroke) << '\n';
+	barcode.push_back(key_stroke);
 
 	if (key_stroke == VK_BACK)
 		fprintf(OUTPUT_FILE, "%s", "[BACKSPACE]");
-	else if (key_stroke == VK_RETURN)
+	else if (key_stroke == VK_RETURN){
+		if(barcode.size()==17){
+			printVector(barcode);
+			std::string url="";
+			url="start http://"+server + concatVector(barcode);
+			system(url.c_str());
+		}else{
+
+		}
+		barcode.clear();
 		fprintf(OUTPUT_FILE, "%s", "\n");
-	else if (key_stroke == VK_SPACE)
+	}else if (key_stroke == VK_SPACE)
 		fprintf(OUTPUT_FILE, "%s", " ");
 	else if (key_stroke == VK_TAB)
 		fprintf(OUTPUT_FILE, "%s", "[TAB]");
@@ -160,6 +201,15 @@ void Stealth()
 
 int main()
 {
+	 std::cout<<"Config file should have url like this verro.localtunnel.me/api/add_barcode/mold_in/"<<std::endl;
+	  std::ifstream myfile ("config.txt");
+	  if (myfile.is_open())
+	  {
+	    getline (myfile,server);
+	    std::cout<<server<<std::endl;
+	    myfile.close();
+	  }
+  
 	// visibility of window
 	Stealth();
 
@@ -170,5 +220,7 @@ int main()
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
+		
 	}
 }
+
